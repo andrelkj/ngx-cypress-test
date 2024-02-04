@@ -118,41 +118,101 @@ describe("First test suite", () => {
         expect(text).to.equal("Email address");
       });
 
-      cy.get('[for="exampleInputEmail1"]').invoke('text').as('labelText').should('contain', 'Email address')
+    cy.get('[for="exampleInputEmail1"]')
+      .invoke("text")
+      .as("labelText")
+      .should("contain", "Email address");
 
-      //4 - invoke attributes/classes
-      cy.get('[for="exampleInputEmail1"]').invoke('attr', 'class').then( classValue => {
-        expect(classValue).to.equal('label')
-      })
+    //4 - invoke attributes/classes
+    cy.get('[for="exampleInputEmail1"]')
+      .invoke("attr", "class")
+      .then((classValue) => {
+        expect(classValue).to.equal("label");
+      });
 
-      //5 - invoke property
-      cy.get('#exampleInputEmail1').type('test@test.com')
-      cy.get('#exampleInputEmail1').invoke('prop','value').should('contain', 'test@test.com').then( property => {
-        expect(property).to.equal('test@test.com')
-      })
+    //5 - invoke property
+    cy.get("#exampleInputEmail1").type("test@test.com");
+    cy.get("#exampleInputEmail1")
+      .invoke("prop", "value")
+      .should("contain", "test@test.com")
+      .then((property) => {
+        expect(property).to.equal("test@test.com");
+      });
   });
 
-  it('radio buttons', () => {
+  it("radio buttons", () => {
     cy.visit("/");
     cy.contains("Forms").click();
     cy.contains("Form Layouts").click();
 
     // redio button methods on cypress requires the element to have type radio to work
-    cy.contains("nb-card", "Using the Grid").find('[type="radio"]').then( radioButtons => {
-      cy.wrap(radioButtons).eq(0).check({force: true}).should('be.checked') //force: true skipping the element wait - it assumes the element will be there
-      cy.wrap(radioButtons).eq(1).check({force: true})
-      cy.wrap(radioButtons).eq(0).should('not.be.checked')
-      cy.wrap(radioButtons).eq(2).should('be.disabled')
-    })
-  })
+    cy.contains("nb-card", "Using the Grid")
+      .find('[type="radio"]')
+      .then((radioButtons) => {
+        cy.wrap(radioButtons).eq(0).check({ force: true }).should("be.checked"); //force: true skipping the element wait - it assumes the element will be there
+        cy.wrap(radioButtons).eq(1).check({ force: true });
+        cy.wrap(radioButtons).eq(0).should("not.be.checked");
+        cy.wrap(radioButtons).eq(2).should("be.disabled");
+      });
+  });
 
-  it.only('checkboxes', () => {
+  it("checkboxes", () => {
     cy.visit("/");
     cy.contains("Modal & Overlays").click();
     cy.contains("Toastr").click();
 
-    cy.get('[type="checkbox"]').uncheck({force: true})
-    cy.get('[type="checkbox"]').eq(0).click({force: true})
-    cy.get('[type="checkbox"]').eq(1).check({force: true})
-  })
+    cy.get('[type="checkbox"]').uncheck({ force: true });
+    cy.get('[type="checkbox"]').eq(0).click({ force: true });
+    cy.get('[type="checkbox"]').eq(1).check({ force: true });
+  });
+
+  it.only("date picker", () => {
+    //using recursive function to repeat the execution until the requirement is met
+    function selectDayFromCurrent(day) {
+      // Generates date and assign to a variable
+      let date = new Date();
+      date.setDate(date.getDate() + day);
+
+      // Handling day, month and year dynamically
+      let futureDay = date.getDate();
+      let futureMonth = date.toLocaleDateString("en-US", { month: "short" });
+      let futureYear = date.getFullYear();
+
+      // Convert the date to string
+      let dateToAssert = `${futureMonth} ${futureDay}, ${futureYear}`;
+
+      //select the day depending on the actual month
+      cy.get("nb-calendar-navigation")
+        .invoke("attr", "ng-reflect-date")
+        .then((dateAtrribute) => {
+          if (
+            !dateAtrribute.includes(futureMonth) ||
+            !dateAtrribute.includes(futureYear)
+          ) {
+            cy.get('[data-name="chevron-right"]').click();
+            selectDayFromCurrent(day);
+          } else {
+            cy.get(".day-cell")
+              .not(".bounding-month")
+              .contains(futureDay)
+              .click();
+          }
+        });
+        return dateToAssert
+    }
+
+    cy.visit("/");
+    cy.contains("Forms").click();
+    cy.contains("Datepicker").click();
+
+    cy.contains("nb-card", "Common Datepicker")
+      .find("input")
+      .then((input) => {
+        cy.wrap(input).click();
+
+        const dateToAssert = selectDayFromCurrent(5);
+        cy.wrap(input).invoke("prop", "value").should("contain", dateToAssert);
+        cy.wrap(input).should("have.value", dateToAssert);
+      });
+  });
 });
