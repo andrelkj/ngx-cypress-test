@@ -166,7 +166,7 @@ describe("First test suite", () => {
     cy.get('[type="checkbox"]').eq(1).check({ force: true });
   });
 
-  it.only("date picker", () => {
+  it("date picker", () => {
     //using recursive function to repeat the execution until the requirement is met
     function selectDayFromCurrent(day) {
       // Generates date and assign to a variable
@@ -198,7 +198,7 @@ describe("First test suite", () => {
               .click();
           }
         });
-        return dateToAssert
+      return dateToAssert;
     }
 
     cy.visit("/");
@@ -214,5 +214,28 @@ describe("First test suite", () => {
         cy.wrap(input).invoke("prop", "value").should("contain", dateToAssert);
         cy.wrap(input).should("have.value", dateToAssert);
       });
+  });
+
+  it.only("lists and dropdowns", () => {
+    cy.visit("/");
+
+    //1 - Look for the theme dropdown and select one option only
+    // cy.get('nav').find('nb-select').click()
+    cy.get("nav nb-select").click(); // abbreviation version of the get and find above
+    cy.get(".options-list").contains("Dark").click();
+    cy.get("nav nb-select").should("contain", "Dark");
+
+    //2 - Look for the dropdown list and check each of the itens in it one at a time
+    cy.get("nav nb-select").then((dropDown) => {
+      cy.wrap(dropDown).click();
+      cy.get(".options-list nb-option").each((listItem, index) => {
+        const itemText = listItem.text().trim(); // trim method remove spaces from the value
+        cy.wrap(listItem).click();
+        cy.wrap(dropDown).should("contain", itemText);
+        if (index < 3){
+          cy.wrap(dropDown).click();
+        }
+      });
+    });
   });
 });
