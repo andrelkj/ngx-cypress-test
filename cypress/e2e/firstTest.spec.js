@@ -216,7 +216,7 @@ describe("First test suite", () => {
       });
   });
 
-  it.only("lists and dropdowns", () => {
+  it("lists and dropdowns", () => {
     cy.visit("/");
 
     //1 - Look for the theme dropdown and select one option only
@@ -232,8 +232,68 @@ describe("First test suite", () => {
         const itemText = listItem.text().trim(); // trim method remove spaces from the value
         cy.wrap(listItem).click();
         cy.wrap(dropDown).should("contain", itemText);
-        if (index < 3){
+        if (index < 3) {
           cy.wrap(dropDown).click();
+        }
+      });
+    });
+  });
+
+  it.only("web tables", () => {
+    cy.visit("/");
+    cy.contains("Tables & Data").click();
+    cy.contains("Smart Table").click();
+
+    //1 - Get the row by text
+    cy.get("tbody")
+      .contains("tr", "Larry")
+      .then((tableRow) => {
+        cy.wrap(tableRow).find(".nb-edit").click();
+        cy.wrap(tableRow).find('[placeholder="Age"]').clear().type("35");
+        cy.wrap(tableRow).find(".nb-checkmark").click();
+        cy.wrap(tableRow).find("td").eq(6).should("contain", "35");
+      });
+
+    //2 - Get row by index
+    cy.get("thead").find(".nb-plus").click();
+    cy.get("thead")
+      .find("tr")
+      .eq(2)
+      .then((tableRow) => {
+        cy.wrap(tableRow).find('[placeholder="First Name"]').type("John");
+        cy.wrap(tableRow).find('[placeholder="Last Name"]').type("Smith");
+        cy.wrap(tableRow).find(".nb-checkmark").click();
+      });
+
+    // Looking for John Smith by column
+    cy.get("tbody tr")
+      .first()
+      .find("td")
+      .then((tableColums) => {
+        cy.wrap(tableColums).eq(2).should("contain", "John");
+        cy.wrap(tableColums).eq(3).should("contain", "Smith");
+      });
+
+    // Looking for John Smith by line
+    cy.get("tbody")
+      .find(".ng-star-inserted")
+      .eq(0)
+      .then((tableRow) => {
+        cy.wrap(tableRow).should("contain", "John");
+        cy.wrap(tableRow).should("contain", "Smith");
+      });
+
+    //3 - Get each row validation
+    const age = [20, 30, 40, 200];
+
+    cy.wrap(age).each((age) => {
+      cy.get('thead [placeholder="Age"]').clear().type(age);
+      cy.wait(500); // adds 500 ms waiting for allowing the table to properly load
+      cy.get("tbody tr").each((tableRow) => {
+        if (age == 200) {
+          cy.wrap(tableRow).should("contain", "No data found");
+        } else {
+          cy.wrap(tableRow).find("td").eq(6).should("contain", age);
         }
       });
     });
