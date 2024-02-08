@@ -239,7 +239,7 @@ describe("First test suite", () => {
     });
   });
 
-  it.only("web tables", () => {
+  it("web tables", () => {
     cy.visit("/");
     cy.contains("Tables & Data").click();
     cy.contains("Smart Table").click();
@@ -297,5 +297,39 @@ describe("First test suite", () => {
         }
       });
     });
+  });
+
+  it("tooltip", () => {
+    cy.visit("/");
+    cy.contains("Modal & Overlays").click();
+    cy.contains("Tooltip").click();
+
+    cy.contains("nb-card", "Colored Tooltips").contains("Default").click();
+    cy.get("nb-tooltip").should("contain", "This is a tooltip");
+  });
+
+  it.only("dialog box", () => {
+    cy.visit("/");
+    cy.contains("Tables & Data").click();
+    cy.contains("Smart Table").click();
+
+    //1 - Using cypress standard method - NOT IDEAL
+    // cypress is configured to automatically confirm web dialog boxes
+    // cy.get("tbody tr").first().find(".nb-trash").click();
+    // // checking for the expected message, this will never be executed if the dialog box is not displayed
+    // cy.on("window:confirm", (confirm) => {
+    //   expect(confirm).to.equal("Are you sure you want to delete?");
+    // });
+
+    //2 - Storing the message value inside the stub constant so that in case the dialog is not displayed a error is triggered for the empty constant
+    // const stub = cy.stub()
+    // cy.on("window:confirm", stub)
+    // cy.get("tbody tr").first().find(".nb-trash").click().then(() => {
+    //   expect(stub.getCall(0)).to.be.calledWith('Are you sure you want to delete?')
+    // })
+    
+    //3 - Manually selecting the cancel option
+    cy.get('tbody tr').first().find('.nb-trash').click()
+    cy.on('window:confirm', () => false)
   });
 });
